@@ -1,0 +1,3 @@
+machine_id,name,ideal_cycle_time_s
+M1,Press 1,30
+M2,Lathe 2,45.5

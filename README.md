@@ -19,6 +19,27 @@ python -m venv .venv
 oee --version
 ```
 
+## Input data
+
+A dataset is a directory with three CSV files:
+
+| File | Columns | Rules |
+| --- | --- | --- |
+| `machines.csv` | `machine_id,name,ideal_cycle_time_s` | unique ids, cycle time > 0 |
+| `states.csv` | `timestamp,machine_id,state,reason_code` | ISO 8601 timestamps; `state` is one of `RUNNING`, `IDLE`, `DOWN`, `PLANNED_STOP`; `reason_code` is required for `DOWN` and must be empty otherwise. Each row lasts until the next row for the same machine. |
+| `production.csv` | `timestamp,machine_id,good_count,scrap_count` | ISO 8601 timestamps; counts are non-negative integers |
+
+Every `machine_id` in `states.csv` and `production.csv` must also appear in `machines.csv`.
+
+```python
+from oee_analytics.io import load_dataset
+
+ds = load_dataset("tests/fixtures/valid")
+ds.machines, ds.states, ds.production
+```
+
+If a file breaks these rules, the loaders raise `DataValidationError` (a `ValueError`). The message names the file, the row number and the problem.
+
 ## Tests
 
 ```bash
