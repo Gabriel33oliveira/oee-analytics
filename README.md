@@ -40,6 +40,20 @@ ds.machines, ds.states, ds.production
 
 If a file breaks these rules, the loaders raise `DataValidationError` (a `ValueError`). The message names the file, the row number and the problem.
 
+## Synthetic data
+
+`oee_analytics.generator` simulates a plant with 4 machines (M1-M4, ideal cycle times of 30, 45, 60 and 90 s) running the three default shifts. Output depends only on the config, so a given seed always produces the same CSV bytes.
+
+```python
+import datetime
+from oee_analytics.generator import GeneratorConfig, generate, write_dataset
+
+config = GeneratorConfig(start=datetime.datetime(2026, 1, 5, 6, 0), days=7, seed=42)
+write_dataset(generate(config), "data/plant")
+```
+
+Each machine switches between RUNNING, IDLE and DOWN. DOWN events get a weighted reason code: `MECHANICAL_FAILURE`, `MATERIAL_SHORTAGE`, `CHANGEOVER`, `NO_OPERATOR`, `QUALITY_HOLD` or `ELECTRICAL_FAULT`. Every machine also has a 30-minute `PLANNED_STOP` each day. Machines differ a little in reliability and scrap rate, and the night shift (C) breaks down more often and produces more scrap. Production is reported at most every 15 minutes of RUNNING time, at 75-98% of the ideal rate. The last state of each machine lasts until `config.end`.
+
 ## Tests
 
 ```bash
