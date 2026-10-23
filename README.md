@@ -54,6 +54,27 @@ write_dataset(generate(config), "data/plant")
 
 Each machine switches between RUNNING, IDLE and DOWN. DOWN events get a weighted reason code: `MECHANICAL_FAILURE`, `MATERIAL_SHORTAGE`, `CHANGEOVER`, `NO_OPERATOR`, `QUALITY_HOLD` or `ELECTRICAL_FAULT`. Every machine also has a 30-minute `PLANNED_STOP` each day. Machines differ a little in reliability and scrap rate, and the night shift (C) breaks down more often and produces more scrap. Production is reported at most every 15 minutes of RUNNING time, at 75-98% of the ideal rate. The last state of each machine lasts until `config.end`.
 
+## OEE metrics
+
+`oee_analytics.metrics` computes OEE per machine, shift and day:
+
+```python
+from oee_analytics.metrics import compute_oee, compute_overall
+
+compute_oee(ds)                                   # one row per machine
+compute_oee(ds, group_by=("machine_id", "shift"))  # any mix of machine_id, shift, date
+compute_oee(ds, group_by=())                       # whole plant
+compute_overall(ds)                                # plant-level OeeResult
+```
+
+- planned time = total time minus `PLANNED_STOP` time
+- run time = `RUNNING` time; downtime = `DOWN` + `IDLE` time
+- availability = run time / planned time
+- performance = Σ(ideal cycle time × parts) / run time, capped at 1.0
+- quality = good / total parts; OEE = availability × performance × quality
+
+Groups are aggregated by summing times and counts, so ratios are never averaged. A zero denominator gives 0.0. States are split at shift boundaries, and production rows are assigned to a shift by timestamp. For the overnight shift, `date` is the day the shift started. The last state of each machine lasts until `end`, which defaults to the latest timestamp in the dataset. Pass `end=config.end` to cover the whole generated period.
+
 ## Tests
 
 ```bash
