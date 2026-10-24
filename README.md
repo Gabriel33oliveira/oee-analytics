@@ -16,8 +16,13 @@ python -m venv .venv
 ## Usage
 
 ```bash
-oee --version
+oee generate --out data/plant [--days 7] [--seed 42] [--start 2026-01-05]
+oee summary data/plant [--by machine|shift|date|machine,shift]
+oee pareto data/plant [--machine M1] [--shift C] [--top 3]
+oee compare data/plant --by machine|shift
 ```
+
+Every command accepts `--format table|csv|json` (default `table`). In tables, availability, performance, quality and OEE are shown as percentages with one decimal. If a CSV file fails validation, the command prints a one-line `oee: error: ...` message to stderr and exits with code 2.
 
 ## Input data
 
@@ -74,6 +79,21 @@ compute_overall(ds)                                # plant-level OeeResult
 - quality = good / total parts; OEE = availability × performance × quality
 
 Groups are aggregated by summing times and counts, so ratios are never averaged. A zero denominator gives 0.0. States are split at shift boundaries, and production rows are assigned to a shift by timestamp. For the overnight shift, `date` is the day the shift started. The last state of each machine lasts until `end`, which defaults to the latest timestamp in the dataset. Pass `end=config.end` to cover the whole generated period.
+
+## Downtime Pareto and comparisons
+
+`oee_analytics.analysis` builds on the metric engine:
+
+```python
+from oee_analytics.analysis import compare_machines, compare_shifts, downtime_pareto, format_table
+
+downtime_pareto(ds)                      # reason_code, events, downtime_min, share_pct, cumulative_pct
+downtime_pareto(ds, machine_id="M1", shift="C")
+compare_shifts(ds)                       # OEE per shift plus rank and oee_delta_pts
+print(format_table(compare_machines(ds)))
+```
+
+The Pareto uses DOWN intervals only, split at shift boundaries, and sorts reasons by downtime, largest first. `events` counts DOWN intervals, so one that spans a shift change counts once (or once in each shift when you filter by shift). In the comparisons, `rank` 1 is the best OEE, and `oee_delta_pts` is the group OEE minus the plant OEE, in percentage points.
 
 ## Tests
 
