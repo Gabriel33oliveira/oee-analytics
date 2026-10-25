@@ -22,6 +22,7 @@ from oee_analytics.io import (
     load_dataset,
 )
 from oee_analytics.metrics import compute_oee
+from oee_analytics.report import write_report
 from oee_analytics.shifts import DEFAULT_SHIFTS
 
 FORMATS = ("table", "csv", "json")
@@ -96,6 +97,12 @@ def build_parser() -> argparse.ArgumentParser:
     compare.add_argument("data_dir", type=Path, metavar="DATA_DIR")
     compare.add_argument("--by", choices=("machine", "shift"), required=True)
     _add_format(compare)
+
+    report = sub.add_parser("report", help="write a self-contained HTML report with charts")
+    report.add_argument("data_dir", type=Path, metavar="DATA_DIR")
+    report.add_argument("--out", required=True, type=Path, metavar="FILE", help="output HTML file")
+    report.add_argument("--title", default="OEE Report", metavar="TEXT", help="report title")
+    report.set_defaults(format="table")
     return parser
 
 
@@ -132,6 +139,9 @@ def _run(args: argparse.Namespace) -> pd.DataFrame:
     if args.command == "pareto":
         table = downtime_pareto(dataset, machine_id=args.machine, shift=args.shift)
         return table.head(args.top) if args.top else table
+    if args.command == "report":
+        path = write_report(dataset, args.out, title=args.title)
+        return pd.DataFrame({"file": [str(path)], "bytes": [path.stat().st_size]})
     if args.by == "shift":
         return compare_shifts(dataset)
     return compare_machines(dataset)

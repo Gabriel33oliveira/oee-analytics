@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="generator" content="oee-analytics {{ version }}">
+<title>{{ title }}</title>
+<style>
+  :root {
+    --ink: #1f2933;
+    --muted: #52606d;
+    --line: #d9dee4;
+    --line-soft: #eceff2;
+    --surface: #ffffff;
+    --page: #f5f6f7;
+    --accent: #0f766e;
+    --accent-soft: #e6f2f0;
+    --good: #0f6b3f;
+    --bad: #a1301d;
+    --font: "Segoe UI", system-ui, -apple-system, "Helvetica Neue", Arial, sans-serif;
+  }
+  * { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
+  body {
+    margin: 0;
+    background: var(--page);
+    color: var(--ink);
+    font: 15px/1.5 var(--font);
+  }
+  ::selection { background: var(--accent-soft); color: var(--ink); }
+  main { max-width: 1120px; margin: 0 auto; padding: 40px 24px 64px; }
+  header.report-header {
+    display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between;
+    gap: 8px 32px; padding-bottom: 20px; border-bottom: 1px solid var(--line);
+  }
+  h1 { margin: 0; font-size: 1.75rem; line-height: 1.2; letter-spacing: -0.01em; text-wrap: balance; }
+  .meta { margin: 0; color: var(--muted); font-size: 0.875rem; display: flex; flex-wrap: wrap; gap: 4px 20px; }
+  .meta dt { display: inline; font-weight: 600; }
+  .meta dd { display: inline; margin: 0 0 0 4px; font-variant-numeric: tabular-nums; }
+  h2 { margin: 48px 0 6px; font-size: 1.125rem; line-height: 1.3; }
+  .section-note { margin: 0 0 16px; color: var(--muted); font-size: 0.875rem; max-width: 70ch; }
+
+  .kpis {
+    display: grid; grid-template-columns: 1.3fr repeat(3, 1fr);
+    margin: 28px 0 0; background: var(--surface);
+    border: 1px solid var(--line); border-radius: 8px;
+  }
+  .kpi { margin: 0; padding: 20px 24px; border-left: 1px solid var(--line-soft); }
+  .kpi:first-child { border-left: 0; background: var(--accent-soft); border-radius: 7px 0 0 7px; }
+  .kpi dt { font-size: 0.8125rem; font-weight: 600; color: var(--muted); }
+  .kpi dd { margin: 4px 0 0; }
+  .kpi-value {
+    display: block; font-size: 2rem; line-height: 1.1; font-weight: 600;
+    font-variant-numeric: tabular-nums; letter-spacing: -0.02em;
+  }
+  .kpi:first-child .kpi-value { color: var(--accent); font-size: 2.5rem; }
+  .kpi-detail { display: block; margin-top: 6px; color: var(--muted); font-size: 0.8125rem; font-variant-numeric: tabular-nums; }
+
+  .charts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+  figure.chart {
+    margin: 0; padding: 16px 16px 12px; background: var(--surface);
+    border: 1px solid var(--line); border-radius: 8px;
+  }
+  figure.chart figcaption { font-weight: 600; font-size: 0.9375rem; margin-bottom: 8px; }
+  figure.chart svg { display: block; width: 100%; height: auto; }
+
+  .table-wrap {
+    overflow-x: auto; background: var(--surface);
+    border: 1px solid var(--line); border-radius: 8px;
+  }
+  .table-wrap:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  table { width: 100%; border-collapse: collapse; font-size: 0.875rem; font-variant-numeric: tabular-nums; }
+  caption { text-align: left; padding: 14px 16px 4px; font-weight: 600; }
+  th, td { padding: 9px 16px; text-align: right; white-space: nowrap; }
+  th:first-child, td:first-child, th.text, td.text { text-align: left; }
+  thead th {
+    color: var(--muted); font-weight: 600; font-size: 0.8125rem;
+    border-bottom: 1px solid var(--line);
+  }
+  tbody tr + tr td { border-top: 1px solid var(--line-soft); }
+  td.oee { font-weight: 600; }
+  td.up { color: var(--good); }
+  td.down { color: var(--bad); }
+  tbody th { font-weight: 600; }
+  tbody tr + tr th { border-top: 1px solid var(--line-soft); }
+  tr.vital > * { background: #fbf7f2; }
+  .tables { display: grid; gap: 16px; }
+
+  footer { margin-top: 48px; color: var(--muted); font-size: 0.8125rem; }
+
+  @media (max-width: 860px) {
+    .charts { grid-template-columns: 1fr; }
+    .kpis { grid-template-columns: repeat(2, 1fr); }
+    .kpi:first-child { grid-column: 1 / -1; border-radius: 7px 7px 0 0; }
+    .kpi:nth-child(2) { border-left: 0; }
+    .kpi:nth-child(n+2) { border-top: 1px solid var(--line-soft); }
+  }
+  @media print {
+    body { background: #fff; font-size: 12px; }
+    main { padding: 0; max-width: none; }
+    figure.chart, .table-wrap { break-inside: avoid; }
+  }
+</style>
+</head>
+<body>
+<main>
+  <header class="report-header">
+    <h1>{{ title }}</h1>
+    <dl class="meta">
+      <div>
+        <dt>Period</dt>
+        <dd>
+{% if date_range %}
+          <time datetime="{{ date_range[0].isoformat() }}">{{ date_range[0].strftime("%d %b %Y %H:%M") }}</time>
+          &ndash;
+          <time datetime="{{ date_range[1].isoformat() }}">{{ date_range[1].strftime("%d %b %Y %H:%M") }}</time>
+{% else %}
+          no events
+{% endif %}
+        </dd>
+      </div>
+      <div>
+        <dt>Generated</dt>
+        <dd><time datetime="{{ generated_at.isoformat() }}">{{ generated_at.strftime("%d %b %Y %H:%M") }}</time></dd>
+      </div>
+    </dl>
+  </header>
+
+  <dl class="kpis" aria-label="Plant KPIs">
+    <div class="kpi">
+      <dt>Plant OEE</dt>
+      <dd>
+        <span class="kpi-value" data-kpi="oee">{{ overall.oee | pct }}</span>
+        <span class="kpi-detail">Availability &times; Performance &times; Quality</span>
+      </dd>
+    </div>
+    <div class="kpi">
+      <dt>Availability</dt>
+      <dd>
+        <span class="kpi-value" data-kpi="availability">{{ overall.availability | pct }}</span>
+        <span class="kpi-detail">{{ (overall.run_time_s / 60) | minutes }} of {{ (overall.planned_time_s / 60) | minutes }} planned min running</span>
+      </dd>
+    </div>
+    <div class="kpi">
+      <dt>Performance</dt>
+      <dd>
+        <span class="kpi-value" data-kpi="performance">{{ overall.performance | pct }}</span>
+        <span class="kpi-detail">Ideal cycle time vs run time</span>
+      </dd>
+    </div>
+    <div class="kpi">
+      <dt>Quality</dt>
+      <dd>
+        <span class="kpi-value" data-kpi="quality">{{ overall.quality | pct }}</span>
+        <span class="kpi-detail">{{ overall.good_count | count }} good, {{ overall.scrap_count | count }} scrap</span>
+      </dd>
+    </div>
+  </dl>
+
+  <h2>Where OEE is lost</h2>
+  <p class="section-note">Bars show each OEE component next to OEE itself. The Pareto ranks DOWN time by reason code; reasons left of the 80% line account for most of the lost time.</p>
+  <div class="charts">
+    <figure class="chart">
+      <figcaption>OEE by machine</figcaption>
+      {{ charts.machine }}
+    </figure>
+    <figure class="chart">
+      <figcaption>OEE by shift</figcaption>
+      {{ charts.shift }}
+    </figure>
+    <figure class="chart">
+      <figcaption>Downtime Pareto</figcaption>
+      {{ charts.pareto }}
+    </figure>
+    <figure class="chart">
+      <figcaption>Daily plant OEE</figcaption>
+      {{ charts.trend }}
+    </figure>
+  </div>
+
+  <h2>Comparisons</h2>
+  <p class="section-note">Rank 1 is the best OEE. &ldquo;vs plant&rdquo; is the group OEE minus plant OEE in percentage points. Durations are in minutes.</p>
+  <div class="tables">
+    <div class="table-wrap" tabindex="0" role="region" aria-label="Machine comparison">
+      <table>
+        <caption>Machines</caption>
+        <thead>
+          <tr>
+            <th scope="col">Rank</th>
+            <th scope="col" class="text">Machine</th>
+            <th scope="col" class="text">Name</th>
+            <th scope="col">Availability</th>
+            <th scope="col">Performance</th>
+            <th scope="col">Quality</th>
+            <th scope="col">OEE</th>
+            <th scope="col">vs plant</th>
+            <th scope="col">Downtime (min)</th>
+            <th scope="col">Good</th>
+            <th scope="col">Scrap</th>
+          </tr>
+        </thead>
+        <tbody>
+{% for row in machines %}
+          <tr>
+            <td>{{ row.rank }}</td>
+            <th scope="row" class="text">{{ row.machine_id }}</th>
+            <td class="text">{{ row.name }}</td>
+            <td>{{ row.availability | pct }}</td>
+            <td>{{ row.performance | pct }}</td>
+            <td>{{ row.quality | pct }}</td>
+            <td class="oee">{{ row.oee | pct }}</td>
+            <td class="{{ 'up' if row.oee_delta_pts >= 0 else 'down' }}">{{ row.oee_delta_pts | points }}</td>
+            <td>{{ (row.downtime_s / 60) | minutes }}</td>
+            <td>{{ row.good_count | count }}</td>
+            <td>{{ row.scrap_count | count }}</td>
+          </tr>
+{% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    <div class="table-wrap" tabindex="0" role="region" aria-label="Shift comparison">
+      <table>
+        <caption>Shifts</caption>
+        <thead>
+          <tr>
+            <th scope="col">Rank</th>
+            <th scope="col" class="text">Shift</th>
+            <th scope="col">Availability</th>
+            <th scope="col">Performance</th>
+            <th scope="col">Quality</th>
+            <th scope="col">OEE</th>
+            <th scope="col">vs plant</th>
+            <th scope="col">Downtime (min)</th>
+            <th scope="col">Good</th>
+            <th scope="col">Scrap</th>
+          </tr>
+        </thead>
+        <tbody>
+{% for row in shifts %}
+          <tr>
+            <td>{{ row.rank }}</td>
+            <th scope="row" class="text">{{ row.shift }}</th>
+            <td>{{ row.availability | pct }}</td>
+            <td>{{ row.performance | pct }}</td>
+            <td>{{ row.quality | pct }}</td>
+            <td class="oee">{{ row.oee | pct }}</td>
+            <td class="{{ 'up' if row.oee_delta_pts >= 0 else 'down' }}">{{ row.oee_delta_pts | points }}</td>
+            <td>{{ (row.downtime_s / 60) | minutes }}</td>
+            <td>{{ row.good_count | count }}</td>
+            <td>{{ row.scrap_count | count }}</td>
+          </tr>
+{% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    <div class="table-wrap" tabindex="0" role="region" aria-label="Top downtime reasons">
+      <table>
+        <caption>Top downtime reasons ({{ total_downtime_min | minutes }} min of DOWN time)</caption>
+        <thead>
+          <tr>
+            <th scope="col" class="text">Reason code</th>
+            <th scope="col">Events</th>
+            <th scope="col">Downtime (min)</th>
+            <th scope="col">Share</th>
+            <th scope="col">Cumulative</th>
+          </tr>
+        </thead>
+        <tbody>
+{% for row in pareto %}
+          <tr{% if loop.first or loop.previtem.cumulative_pct < 80 %} class="vital"{% endif %}>
+            <th scope="row" class="text">{{ row.reason_code }}</th>
+            <td>{{ row.events | count }}</td>
+            <td>{{ row.downtime_min | minutes }}</td>
+            <td>{{ row.share_pct | share }}</td>
+            <td>{{ row.cumulative_pct | share }}</td>
+          </tr>
+{% else %}
+          <tr><td colspan="5" class="text">No DOWN events in this period.</td></tr>
+{% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <footer>Generated by oee-analytics {{ version }}. Highlighted reasons make up the first 80% of downtime.</footer>
+</main>
+</body>
+</html>

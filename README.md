@@ -20,9 +20,10 @@ oee generate --out data/plant [--days 7] [--seed 42] [--start 2026-01-05]
 oee summary data/plant [--by machine|shift|date|machine,shift]
 oee pareto data/plant [--machine M1] [--shift C] [--top 3]
 oee compare data/plant --by machine|shift
+oee report data/plant --out report.html [--title TEXT]
 ```
 
-Every command accepts `--format table|csv|json` (default `table`). In tables, availability, performance, quality and OEE are shown as percentages with one decimal. If a CSV file fails validation, the command prints a one-line `oee: error: ...` message to stderr and exits with code 2.
+Every command except `report` accepts `--format table|csv|json` (default `table`). In tables, availability, performance, quality and OEE are shown as percentages with one decimal. If a CSV file fails validation, the command prints a one-line `oee: error: ...` message to stderr and exits with code 2.
 
 ## Input data
 
@@ -94,6 +95,19 @@ print(format_table(compare_machines(ds)))
 ```
 
 The Pareto uses DOWN intervals only, split at shift boundaries, and sorts reasons by downtime, largest first. `events` counts DOWN intervals, so one that spans a shift change counts once (or once in each shift when you filter by shift). In the comparisons, `rank` 1 is the best OEE, and `oee_delta_pts` is the group OEE minus the plant OEE, in percentage points.
+
+## HTML report
+
+`oee_analytics.report` renders a single HTML file with inline CSS and inline SVG charts, so it opens offline and loads nothing from the network:
+
+```python
+from oee_analytics.report import build_report, write_report
+
+html = build_report(ds, title="OEE Report")
+write_report(ds, "report.html")
+```
+
+The report has a header with the data period and generation time, KPIs for plant OEE, availability, performance and quality, four charts (OEE components per machine and per shift, the downtime Pareto with its cumulative line and 80% mark, and daily plant OEE), and tables for machines, shifts and downtime reasons. Percentages have one decimal and durations are in minutes. The charts come from `oee_analytics.charts`, which uses matplotlib's Agg backend and returns each chart as an `<svg>` string. The Jinja2 template ships as package data (`oee_analytics/templates/report.html.j2`) and is loaded with `importlib.resources`.
 
 ## Tests
 

@@ -23,5 +23,8 @@ oee = "oee_analytics.cli:main"
 [tool.setuptools.packages.find]
 where = ["src"]
 
+[tool.setuptools.package-data]
+oee_analytics = ["templates/*.j2"]
+
 [tool.pytest.ini_options]
 testpaths = ["tests"]
