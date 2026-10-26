@@ -1,0 +1,5 @@
+machine_id,name,ideal_cycle_time_s
+M1,Stamping Press,30
+M2,CNC Lathe,45
+M3,Injection Molder,60
+M4,Assembly Cell,90

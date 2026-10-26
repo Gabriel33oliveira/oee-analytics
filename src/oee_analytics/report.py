@@ -47,6 +47,7 @@ def format_minutes(minutes: float) -> str:
 
 
 def format_count(value: int) -> str:
+    """Format an integer count with a thousands separator, e.g. ``12345 -> '12,345'``."""
     return f"{int(value):,}"
 
 

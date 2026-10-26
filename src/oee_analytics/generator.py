@@ -92,6 +92,7 @@ class GeneratorConfig:
 
     @property
     def end(self) -> datetime.datetime:
+        """End of the simulated period: ``start`` plus ``days``."""
         return self.start + datetime.timedelta(days=self.days)
 
 
